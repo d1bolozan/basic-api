@@ -53,9 +53,17 @@ namespace api.Repository
             return await stocks.ToListAsync();
         }
 
-        public async Task<List<Stock>> GetAllPaginatedAsync(QueryObject query)
+        public async Task<List<Stock>> GetAllPaginatedAsync(PaginatedStockQueryObject query)
         {
-            var stocks = await GetAllAsync(query);
+            var stocks = await GetAllAsync(
+                new QueryObject
+                {
+                    CompanyName = query.CompanyName,
+                    Symbol = query.Symbol,
+                    SortBy = query.SortBy,
+                    IsDecsending = query.IsDecsending,
+                }
+            );
 
             var skipNumber = (query.PageNumber - 1) * query.PageSize;
             stocks = stocks.Skip(skipNumber).Take(query.PageSize).ToList();
@@ -68,6 +76,11 @@ namespace api.Repository
             return await _dbContext
                 .Stocks.Include(comment => comment.Comments)
                 .FirstOrDefaultAsync(stock => stock.Id == id);
+        }
+
+        public async Task<Stock?> GetBySymbolAsync(string symbol)
+        {
+            return await _dbContext.Stocks.FirstOrDefaultAsync(stock => stock.Symbol == symbol);
         }
 
         public async Task<Stock> CreateAsync(Stock stock)
